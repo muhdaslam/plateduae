@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://plated.internal/schemas/extraction.schema.json",
+  "title": "MenuExtraction",
+  "description": "Contract between the extraction model (vision LLM + OCR pre-pass) and everything downstream. Strict, versioned, and validated before anything is written. See Appendix B of the Plated Application Development Plan.",
+  "type": "object",
+  "required": ["schema_version", "source", "venue_hint", "sections"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.2"
+    },
+    "source": {
+      "type": "object",
+      "required": ["artefact_id", "content_hash", "captured_at", "channel", "detected_languages"],
+      "additionalProperties": false,
+      "properties": {
+        "artefact_id": { "type": "string", "description": "Object storage key/URI of the raw source artefact." },
+        "content_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "captured_at": { "type": "string", "format": "date-time" },
+        "channel": { "type": "string", "enum": ["dine_in", "delivery", "takeaway"] },
+        "detected_languages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "venue_hint": {
+      "type": "object",
+      "required": ["name", "currency"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "branch_hint": { "type": ["string", "null"] },
+        "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/section" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    }
+  },
+  "$defs": {
+    "section": {
+      "type": "object",
+      "required": ["name", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "name_ar": { "type": ["string", "null"] },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/menuItem" }
+        }
+      }
+    },
+    "menuItem": {
+      "type": "object",
+      "required": [
+        "name",
+        "base_price",
+        "currency",
+        "dietary_flags",
+        "allergen_flags",
+        "allergen_source",
+        "calories_source",
+        "extraction_confidence",
+        "bbox",
+        "page"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "name_ar": { "type": ["string", "null"] },
+        "description": { "type": ["string", "null"] },
+        "base_price": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+        "size_variants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "price"],
+            "additionalProperties": false,
+            "properties": {
+              "label": { "type": "string" },
+              "price": { "type": "number", "minimum": 0 }
+            }
+          },
+          "default": []
+        },
+        "modifier_groups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/modifierGroup" },
+          "default": []
+        },
+        "dietary_flags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "allergen_flags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "allergen_source": {
+          "type": "string",
+          "enum": ["declared_on_menu", "inferred", "unknown"],
+          "description": "Mandatory: an inferred value and a declared value carry entirely different liability and must render differently to the consumer."
+        },
+        "calories": { "type": ["number", "null"] },
+        "calories_source": {
+          "type": "string",
+          "enum": ["declared_on_menu", "inferred", "unknown"]
+        },
+        "extraction_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "bbox": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "[x0, y0, x1, y1] normalised 0-1, retained so any published field can be shown back to a reviewer or restaurant owner in its original page context."
+        },
+        "page": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "modifierGroup": {
+      "type": "object",
+      "required": ["name", "min", "max", "options"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "min": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 0 },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "price"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "price": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,917 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/search": {
+      "get": {
+        "operationId": "SearchController_search",
+        "summary": "Dish search: text/cuisine/venue intent, geo-filtered and ranked.",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free-text dish, cuisine, or loose description.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lat",
+            "required": false,
+            "in": "query",
+            "description": "Latitude of the search origin.",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lng",
+            "required": false,
+            "in": "query",
+            "description": "Longitude of the search origin.",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "radius",
+            "required": false,
+            "in": "query",
+            "description": "Search radius in kilometres.",
+            "schema": {
+              "default": 3,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated filters, e.g. 'dietary:halal,price_ceiling:30'.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "relevance",
+                "price_asc",
+                "price_desc",
+                "distance"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Opaque pagination cursor.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/v1/suggest": {
+      "get": {
+        "operationId": "SearchController_suggest",
+        "summary": "Type-ahead over canonical dishes, cuisines and venues.",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SuggestResultDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/v1/dishes/{id}": {
+      "get": {
+        "operationId": "CatalogueController_getDish",
+        "summary": "Canonical dish detail with local price distribution.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DishDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "catalogue"
+        ]
+      }
+    },
+    "/v1/dishes/{id}/offers": {
+      "get": {
+        "operationId": "CatalogueController_getOffers",
+        "summary": "Every nearby menu item mapped to this canonical dish, ranked.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DishOfferDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "catalogue"
+        ]
+      }
+    },
+    "/v1/corrections": {
+      "post": {
+        "operationId": "CatalogueController_createCorrection",
+        "summary": "Submit a price or availability correction.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCorrectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorrectionAckDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "catalogue"
+        ]
+      }
+    },
+    "/v1/clicks": {
+      "post": {
+        "operationId": "PricingController_recordClick",
+        "summary": "Record an outbound click for attribution.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordClickDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClickAckDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "pricing"
+        ]
+      }
+    },
+    "/v1/venues/{id}": {
+      "get": {
+        "operationId": "GeoVenueController_getVenue",
+        "summary": "Branch detail: hours, geo, outbound channels.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VenueDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "geo-venue"
+        ]
+      }
+    },
+    "/v1/venues/{id}/menu": {
+      "get": {
+        "operationId": "GeoVenueController_getVenueMenu",
+        "summary": "Full structured menu with freshness metadata per field.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VenueMenuDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "geo-venue"
+        ]
+      }
+    },
+    "/v1/me/saved": {
+      "get": {
+        "operationId": "UserAlertsController_getSaved",
+        "summary": "Saved dishes and alert configuration.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "user-alerts"
+        ]
+      }
+    },
+    "/internal/ingest": {
+      "post": {
+        "operationId": "InternalController_enqueueIngest",
+        "summary": "Enqueue a source artefact for extraction.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnqueueIngestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnqueueAckDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/review/queue": {
+      "get": {
+        "operationId": "InternalController_getReviewQueue",
+        "summary": "Pull the next canonicalisation review batch.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewQueueItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/review/{id}": {
+      "post": {
+        "operationId": "InternalController_submitReviewDecision",
+        "summary": "Submit a reviewer decision; logged as training data.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "internal"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Plated API",
+    "description": "Dish-first search and price-comparison API. See Appendix A of the Application Development Plan.",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "SearchResultItemDto": {
+        "type": "object",
+        "properties": {
+          "canonicalDishId": {
+            "type": "string"
+          },
+          "dishName": {
+            "type": "string"
+          },
+          "venueId": {
+            "type": "string"
+          },
+          "venueName": {
+            "type": "string"
+          },
+          "distanceKm": {
+            "type": "number"
+          },
+          "price": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "priceVsMedian": {
+            "type": "string",
+            "description": "Position of this price within the local canonical-dish distribution."
+          },
+          "lastVerifiedAt": {
+            "type": "string",
+            "description": "ISO timestamp of the last-verified price."
+          }
+        },
+        "required": [
+          "canonicalDishId",
+          "dishName",
+          "venueId",
+          "venueName",
+          "distanceKm",
+          "price",
+          "currency",
+          "priceVsMedian",
+          "lastVerifiedAt"
+        ]
+      },
+      "SearchResultDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchResultItemDto"
+            }
+          },
+          "cursor": {
+            "type": "object",
+            "nullable": true,
+            "description": "Opaque cursor for the next page, or null if none."
+          }
+        },
+        "required": [
+          "items",
+          "cursor"
+        ]
+      },
+      "SuggestResultDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "label"
+        ]
+      },
+      "PriceDistributionDto": {
+        "type": "object",
+        "properties": {
+          "p25": {
+            "type": "number"
+          },
+          "median": {
+            "type": "number"
+          },
+          "p75": {
+            "type": "number"
+          },
+          "sampleSize": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "p25",
+          "median",
+          "p75",
+          "sampleSize"
+        ]
+      },
+      "DishDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "canonicalName": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "object",
+            "nullable": true
+          },
+          "cuisine": {
+            "type": "object",
+            "nullable": true
+          },
+          "priceDistribution": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PriceDistributionDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "canonicalName",
+          "nameAr",
+          "cuisine",
+          "priceDistribution"
+        ]
+      },
+      "DishOfferDto": {
+        "type": "object",
+        "properties": {
+          "menuItemId": {
+            "type": "string"
+          },
+          "venueId": {
+            "type": "string"
+          },
+          "venueName": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "distanceKm": {
+            "type": "number"
+          },
+          "lastVerifiedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "menuItemId",
+          "venueId",
+          "venueName",
+          "price",
+          "currency",
+          "distanceKm",
+          "lastVerifiedAt"
+        ]
+      },
+      "CreateCorrectionDto": {
+        "type": "object",
+        "properties": {
+          "targetRef": {
+            "type": "string",
+            "description": "Loose reference to the target entity, e.g. 'menu_item:<uuid>'."
+          },
+          "field": {
+            "type": "string",
+            "description": "The field being corrected, e.g. 'base_price'."
+          },
+          "reportedValue": {
+            "type": "string"
+          },
+          "reporterType": {
+            "type": "string",
+            "enum": [
+              "user",
+              "owner"
+            ]
+          }
+        },
+        "required": [
+          "targetRef",
+          "field",
+          "reporterType"
+        ]
+      },
+      "CorrectionAckDto": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accepted",
+          "id"
+        ]
+      },
+      "RecordClickDto": {
+        "type": "object",
+        "properties": {
+          "menuItemId": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string",
+            "description": "Resolved outbound URL the user was sent to."
+          },
+          "partner": {
+            "type": "string",
+            "description": "venue_channel, or a delivery platform slug."
+          },
+          "userRef": {
+            "type": "string",
+            "description": "Omitted for logged-out users."
+          }
+        },
+        "required": [
+          "menuItemId",
+          "destination",
+          "partner"
+        ]
+      },
+      "ClickAckDto": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accepted",
+          "id"
+        ]
+      },
+      "VenueDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "brandName": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "community": {
+            "type": "string"
+          },
+          "outboundChannels": {
+            "description": "Outbound channels: venue's own ordering links.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "brandName",
+          "address",
+          "community",
+          "outboundChannels"
+        ]
+      },
+      "MenuItemFieldFreshnessDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "lastVerifiedAt": {
+            "type": "string"
+          },
+          "stale": {
+            "type": "boolean",
+            "description": "True once the field is past its TTL (PDF section 5.4)."
+          }
+        },
+        "required": [
+          "field",
+          "lastVerifiedAt",
+          "stale"
+        ]
+      },
+      "VenueMenuItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "basePrice": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "freshness": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuItemFieldFreshnessDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "basePrice",
+          "currency",
+          "freshness"
+        ]
+      },
+      "VenueMenuDto": {
+        "type": "object",
+        "properties": {
+          "venueId": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VenueMenuItemDto"
+            }
+          }
+        },
+        "required": [
+          "venueId",
+          "items"
+        ]
+      },
+      "SavedDishDto": {
+        "type": "object",
+        "properties": {
+          "canonicalDishId": {
+            "type": "string"
+          },
+          "dishName": {
+            "type": "string"
+          },
+          "alertOnPriceDrop": {
+            "type": "boolean",
+            "description": "Alert when a nearby venue lists it cheaper or newly serves it."
+          }
+        },
+        "required": [
+          "canonicalDishId",
+          "dishName",
+          "alertOnPriceDrop"
+        ]
+      },
+      "SavedResponseDto": {
+        "type": "object",
+        "properties": {
+          "savedDishes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SavedDishDto"
+            }
+          }
+        },
+        "required": [
+          "savedDishes"
+        ]
+      },
+      "EnqueueIngestDto": {
+        "type": "object",
+        "properties": {
+          "artefactId": {
+            "type": "string",
+            "description": "Object storage key of the captured source artefact."
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "dine_in",
+              "delivery",
+              "takeaway"
+            ]
+          }
+        },
+        "required": [
+          "artefactId",
+          "channel"
+        ]
+      },
+      "EnqueueAckDto": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "jobId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accepted",
+          "jobId"
+        ]
+      },
+      "ReviewQueueItemDto": {
+        "type": "object",
+        "properties": {
+          "dishMappingId": {
+            "type": "string"
+          },
+          "menuItemName": {
+            "type": "string"
+          },
+          "candidateCanonicalDishName": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "dishMappingId",
+          "menuItemName",
+          "candidateCanonicalDishName",
+          "confidence"
+        ]
+      },
+      "ReviewDecisionDto": {
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "confirm",
+              "reject"
+            ]
+          },
+          "reassignToCanonicalDishId": {
+            "type": "string",
+            "description": "Required when decision is 'reject' and a different canonical dish applies."
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      }
+    }
+  }
+}

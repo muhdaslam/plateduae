@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788993723130,
+      "tag": "0000_first_karen_page",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788993734570,
+      "tag": "0001_append_only_price_observation",
+      "breakpoints": true
+    }
+  ]
+}

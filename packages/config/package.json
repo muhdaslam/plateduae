@@ -1,0 +1,16 @@
+{
+  "name": "@plated/config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./index.js",
+  "exports": {
+    "./tsconfig.base.json": "../../tsconfig.base.json",
+    "./eslint-base": "./eslint-base.js",
+    "./eslint-module-boundaries": "./eslint-module-boundaries.js"
+  },
+  "dependencies": {
+    "typescript-eslint": "^8.15.0",
+    "eslint-plugin-boundaries": "^4.2.0",
+    "eslint-import-resolver-typescript": "^3.6.0"
+  }
+}
