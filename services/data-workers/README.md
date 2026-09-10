@@ -13,6 +13,10 @@ confidence banding (auto-map ≥0.90, review queue 0.70–0.90, no confident
 match below 0.70 → `canonical_dish_id` left null for a reviewer to curate a
 new dish). Ingestion and extraction are still stubs — see their docstrings.
 
+**The ingest bridge is real**: apps/api's `POST /internal/ingest` calls this
+service's `POST /enqueue` over HTTP, which dispatches a real Arq job — see
+"Run" below for why this is HTTP rather than a direct Redis call from Node.
+
 ## Local setup
 
 ```bash
@@ -23,15 +27,24 @@ pip install -e ".[dev]"
 
 ## Run
 
-Two processes, both read config from the repo-root `.env`:
+Two processes, both read config from the repo-root `.env`. Both need to be
+running for `POST /internal/ingest` (on apps/api) to work end to end —
+without this service, that one endpoint returns a 503; without the worker,
+jobs enqueue but never get picked up.
 
 ```bash
-# FastAPI app (healthz + local /enqueue helper)
+# FastAPI app (healthz + the /enqueue bridge apps/api calls)
 uvicorn app.main:app --reload --port 8000
 
 # Arq worker (the actual task runner)
 arq worker.WorkerSettings
 ```
+
+`POST /enqueue` exists because Arq's default job serialisation is Python's
+pickle — a Node process can't hand-construct a compatible job payload
+without reverse-engineering that wire protocol, so apps/api calls this
+plain HTTP endpoint instead, and this service (which already speaks Arq
+natively) does the real `enqueue_job` call on its behalf.
 
 ## Canonicalisation matching
 

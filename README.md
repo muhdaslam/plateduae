@@ -17,8 +17,12 @@ core cuisine mix, short of the plan's 800-1,200 target which needs actual
 food-literate curation. Dish canonicalisation matching is implemented
 (`services/data-workers/tasks/canonicalisation.py`, section 5.3): hybrid
 local-embedding + fuzzy matching with the plan's confidence banding — see
-that service's README. Still not implemented: OCR/vision-LLM extraction,
-auth, affiliate/commission handling. See "Non-scope" below.
+that service's README. `POST /internal/ingest` really dispatches a job to
+the Python worker now, over HTTP (Arq's job serialisation is Python-
+specific, so Node calls a plain HTTP bridge rather than talking Arq's wire
+protocol directly — see that service's README). Still not implemented:
+the actual OCR/vision-LLM extraction logic itself, auth, affiliate/
+commission handling. See "Non-scope" below.
 
 ## Layout
 
