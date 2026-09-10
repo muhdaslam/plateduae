@@ -6,10 +6,17 @@ the Application Development Plan (v1.0) — this repo is the Phase 0/1
 foundation described there: system architecture (section 6), technology
 stack (section 7), and data model (section 8).
 
-**This pass is scaffolding only.** Repo structure, tech stack wiring, DB
-schema/migrations, and empty service boundaries are in place; no feature
-logic (search ranking, canonicalisation matching, OCR/LLM extraction, auth,
-affiliate/commission handling) is implemented yet. See "Non-scope" below.
+**Status.** Repo structure, tech stack wiring, and DB schema/migrations are
+in place. `search`, `catalogue`, `geo-venue`, `pricing`, and the internal
+review queue are wired to real Postgres (geo-filtered search, live price
+comparison, real writes) — see each service's code comments for exactly
+what's simplified versus the plan's full design (real ranking/OpenSearch,
+full filters, cursor pagination are not there yet). A ~107-dish starter
+canonical taxonomy is seeded (`packages/db/src/taxonomy`) covering Dubai's
+core cuisine mix, short of the plan's 800-1,200 target which needs actual
+food-literate curation. Still not implemented: OCR/vision-LLM extraction,
+canonicalisation matching (the taxonomy exists, the matching algorithm
+doesn't yet), auth, affiliate/commission handling. See "Non-scope" below.
 
 ## Layout
 
@@ -20,7 +27,7 @@ apps/
 services/
   data-workers/    Python (FastAPI + Arq) — data plane workers
 packages/
-  db/              Drizzle schema + migrations (source of truth for DB shape)
+  db/              Drizzle schema + migrations (source of truth for DB shape); src/taxonomy holds the seed canonical-dish list
   contracts/       Appendix B extraction JSON Schema — generates TS + Python models
   shared-types/     Persisted domain types, derived from packages/db
   api-client/       Typed client (openapi-fetch) for apps/web, generated from apps/api's OpenAPI doc
@@ -41,8 +48,9 @@ later stays cheap.
 
 ```bash
 cp .env.example .env
-make bootstrap   # docker compose up, pnpm install, generate contracts, migrate DB, set up the Python venv
-pnpm dev         # apps/web + apps/api
+make bootstrap    # docker compose up, pnpm install, generate contracts, migrate DB, seed the canonical taxonomy, set up the Python venv
+make db-seed      # optional: fake demo restaurants/menus so search/comparison have something to show
+pnpm dev          # apps/web + apps/api
 ```
 
 Data workers run separately — see `services/data-workers/README.md`.

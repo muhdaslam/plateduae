@@ -1,0 +1,1 @@
+ALTER TABLE "canonical_dish" ADD CONSTRAINT "canonical_dish_canonical_name_unique" UNIQUE("canonical_name");

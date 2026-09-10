@@ -13,6 +13,7 @@
     "test": "turbo run test",
     "db:generate": "pnpm --filter @plated/db db:generate",
     "db:migrate": "pnpm --filter @plated/db db:migrate",
+    "db:seed-taxonomy": "pnpm --filter @plated/db db:seed-taxonomy",
     "db:seed": "pnpm --filter @plated/db db:seed",
     "db:studio": "pnpm --filter @plated/db db:studio",
     "contracts:generate": "pnpm --filter @plated/contracts generate",

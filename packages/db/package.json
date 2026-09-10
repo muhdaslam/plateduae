@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "dotenv -e ../../.env -- tsx src/migrate.ts",
+    "db:seed-taxonomy": "dotenv -e ../../.env -- tsx src/seed-taxonomy.ts",
     "db:seed": "dotenv -e ../../.env -- tsx src/seed.ts",
     "db:studio": "dotenv -e ../../.env -- drizzle-kit studio",
     "typecheck": "tsc --noEmit"

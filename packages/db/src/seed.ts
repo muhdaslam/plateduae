@@ -1,4 +1,5 @@
-import { createDb } from "./client";
+import { eq } from "drizzle-orm";
+import { createDb, type Database } from "./client";
 import {
   restaurant,
   branch,
@@ -15,7 +16,19 @@ import {
  * price-comparison view has something to compare), plus one pending-review
  * mapping so the internal review queue isn't always empty. Not idempotent —
  * intended for a fresh local DB, matching `make bootstrap`'s flow.
+ *
+ * Looks up its two canonical dishes by name rather than inserting them
+ * directly: both already exist in the taxonomy (src/taxonomy, loaded by
+ * `db:seed-taxonomy`), which `make bootstrap` runs first. Falls back to
+ * inserting if that step was skipped, so this script still works alone.
  */
+async function getOrCreateCanonicalDish(db: Database, values: typeof canonicalDish.$inferInsert) {
+  const [existing] = await db.select().from(canonicalDish).where(eq(canonicalDish.canonicalName, values.canonicalName));
+  if (existing) return existing;
+  const [created] = await db.insert(canonicalDish).values(values).returning();
+  return created!;
+}
+
 async function main() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL is required.");
@@ -62,27 +75,22 @@ async function main() {
     .values({ branchId: cornerBranch!.id, channel: "dine_in", sourceArtefactId: "seed:corner-menu-1" })
     .returning();
 
-  const [shawarmaDish] = await db
-    .insert(canonicalDish)
-    .values({
-      canonicalName: "Chicken Shawarma",
-      aliases: ["Shawarma Djaj", "Chicken Shawarma Sandwich"],
-      nameAr: "شاورما دجاج",
-      cuisine: "levantine",
-      category: "sandwich",
-      curatedBy: "seed",
-    })
-    .returning();
-  const [taoukDish] = await db
-    .insert(canonicalDish)
-    .values({
-      canonicalName: "Shish Taouk Wrap",
-      aliases: [],
-      cuisine: "levantine",
-      category: "sandwich",
-      curatedBy: "seed",
-    })
-    .returning();
+  const shawarmaDish = await getOrCreateCanonicalDish(db, {
+    canonicalName: "Chicken Shawarma",
+    aliases: ["Shawarma Djaj", "Chicken Shawarma Sandwich"],
+    nameAr: "شاورما دجاج",
+    cuisine: "levantine",
+    category: "sandwich",
+    curatedBy: "seed",
+  });
+  const taoukDish = await getOrCreateCanonicalDish(db, {
+    canonicalName: "Shish Taouk Wrap",
+    aliases: [],
+    nameAr: "لفة شيش طاووق",
+    cuisine: "levantine",
+    category: "sandwich",
+    curatedBy: "seed",
+  });
 
   const [alReefShawarma] = await db
     .insert(menuItem)
@@ -130,19 +138,19 @@ async function main() {
   await db.insert(dishMapping).values([
     {
       menuItemId: alReefShawarma!.id,
-      canonicalDishId: shawarmaDish!.id,
+      canonicalDishId: shawarmaDish.id,
       confidence: 0.94,
       reviewState: "confirmed",
     },
     {
       menuItemId: cornerShawarma!.id,
-      canonicalDishId: shawarmaDish!.id,
+      canonicalDishId: shawarmaDish.id,
       confidence: 0.72,
       reviewState: "pending_review", // leaves one real row in the internal review queue
     },
     {
       menuItemId: cornerTaouk!.id,
-      canonicalDishId: taoukDish!.id,
+      canonicalDishId: taoukDish.id,
       confidence: 0.9,
       reviewState: "confirmed",
     },
@@ -155,7 +163,7 @@ async function main() {
   ]);
 
   console.log("Seed complete.");
-  console.log(`  canonical dish (for GET /v1/dishes/:id): ${shawarmaDish!.id}`);
+  console.log(`  canonical dish (for GET /v1/dishes/:id): ${shawarmaDish.id}`);
   console.log(`  venue (for GET /v1/venues/:id): ${alReefBranch!.id}`);
 }
 

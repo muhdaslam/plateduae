@@ -1,4 +1,4 @@
-.PHONY: up down logs db-migrate db-studio generate-contracts bootstrap
+.PHONY: up down logs db-migrate db-seed-taxonomy db-seed db-studio generate-contracts bootstrap
 
 up:
 	docker compose up -d
@@ -14,6 +14,12 @@ logs:
 
 db-migrate:
 	pnpm db:migrate
+
+db-seed-taxonomy:
+	pnpm db:seed-taxonomy
+
+db-seed:
+	pnpm db:seed
 
 db-studio:
 	pnpm db:studio
@@ -34,5 +40,7 @@ bootstrap: up
 	pnpm install
 	$(MAKE) generate-contracts
 	pnpm db:migrate
+	pnpm db:seed-taxonomy
 	cd services/data-workers && python3 -m venv .venv && . .venv/bin/activate && pip install -e ".[dev]"
-	@echo "Bootstrap complete. Run 'pnpm dev' to start web+api, and the data-workers service separately (see services/data-workers/README)."
+	@echo "Bootstrap complete. Canonical dish taxonomy loaded (see packages/db/src/taxonomy)."
+	@echo "Run 'make db-seed' for fake demo restaurants/menus to test against, 'pnpm dev' to start web+api, and the data-workers service separately (see services/data-workers/README)."

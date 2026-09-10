@@ -11,7 +11,7 @@ export const CANONICAL_DISH_EMBEDDING_DIMENSIONS = 768;
  * separate rows here. */
 export const canonicalDish = pgTable("canonical_dish", {
   id: uuid("id").primaryKey().defaultRandom(),
-  canonicalName: text("canonical_name").notNull(),
+  canonicalName: text("canonical_name").notNull().unique(),
   aliases: text("aliases").array().notNull().default([]),
   nameAr: text("name_ar"),
   cuisine: text("cuisine"),

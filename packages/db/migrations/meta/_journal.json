@@ -15,6 +15,13 @@
       "when": 1788993734570,
       "tag": "0001_append_only_price_observation",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788999578272,
+      "tag": "0002_groovy_doctor_doom",
+      "breakpoints": true
     }
   ]
 }
