@@ -29,6 +29,13 @@
       "when": 1789000399799,
       "tag": "0003_sudden_medusa",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789004142038,
+      "tag": "0004_enable_pg_trgm",
+      "breakpoints": true
     }
   ]
 }

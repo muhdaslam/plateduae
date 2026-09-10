@@ -10,8 +10,15 @@ stack (section 7), and data model (section 8).
 in place. `search`, `catalogue`, `geo-venue`, `pricing`, and the internal
 review queue are wired to real Postgres (geo-filtered search, live price
 comparison, real writes) — see each service's code comments for exactly
-what's simplified versus the plan's full design (real ranking/OpenSearch,
-full filters, cursor pagination are not there yet). A ~107-dish starter
+what's simplified versus the plan's full design (hybrid BM25+vector
+retrieval over OpenSearch, full filters, cursor pagination are not there
+yet). Search ranking (section 9.3) is real for the four signals with
+actual underlying data — text relevance (pg_trgm, not a live embedding
+call — section 6 rules that out in the request path), distance decay,
+price position, and freshness — weights renormalised since quality signal,
+availability/fees, and personalisation have no real data behind them yet
+(see `search.service.ts`'s weight constants for exactly why each is
+omitted rather than faked). A ~107-dish starter
 canonical taxonomy is seeded (`packages/db/src/taxonomy`) covering Dubai's
 core cuisine mix, short of the plan's 800-1,200 target which needs actual
 food-literate curation. Dish canonicalisation matching is implemented
@@ -66,7 +73,8 @@ Once `apps/api` is running: OpenAPI docs at `http://localhost:3001/docs`.
 
 ## Non-scope for this pass
 
-Not built yet, on purpose: OCR/vision-LLM extraction logic, search ranking,
+Not built yet, on purpose: OCR/vision-LLM extraction logic, hybrid
+BM25+vector retrieval over OpenSearch, query intent classification (9.1),
 auth/session, affiliate/commission logic, the React Native mobile app,
 restaurant/review consoles, production hosting (AWS/ECS/Terraform), CDN/WAF,
 observability wiring. These land in later phases per the plan's own roadmap
