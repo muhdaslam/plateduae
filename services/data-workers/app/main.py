@@ -3,10 +3,12 @@ from contextlib import asynccontextmanager
 
 from arq import ArqRedis, create_pool
 from arq.connections import RedisSettings
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from app.config import settings
+from app.file_utils import to_page_images
+from app.vision_extraction import detect_venue
 
 
 @asynccontextmanager
@@ -56,3 +58,27 @@ async def enqueue(req: EnqueueRequest) -> EnqueueResponse:
         # one, but fail loudly rather than lying about a job_id.
         raise HTTPException(status_code=409, detail="Job was not enqueued (duplicate job_id?).")
     return EnqueueResponse(job_id=job.job_id)
+
+
+class VenueDetectionResponse(BaseModel):
+    name: str
+    branch_hint: str | None
+    currency: str
+
+
+@app.post("/detect-venue", response_model=VenueDetectionResponse)
+async def detect_venue_route(file: UploadFile = File(...)) -> VenueDetectionResponse:  # noqa: B008
+    """Synchronous — called directly from apps/api's POST
+    /internal/detect-venue the moment a file is dropped on the upload page,
+    not queued through Arq like the real pipeline. Only reads the first
+    page/image; a menu's venue branding is virtually always on page one,
+    and pulling more would just slow down what's meant to be an instant
+    pre-fill."""
+    data = await file.read()
+    try:
+        pages = to_page_images(data)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    hint = await detect_venue(pages[0])
+    return VenueDetectionResponse(name=hint.name, branch_hint=hint.branch_hint, currency=hint.currency)

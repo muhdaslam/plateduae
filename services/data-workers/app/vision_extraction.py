@@ -51,6 +51,44 @@ class PartialExtraction(BaseModel):
     warnings: list[str] = []
 
 
+VENUE_DETECTION_PROMPT = """You are shown one image: the first page of a restaurant menu (a photo or \
+rendered PDF page). Identify only the venue itself — do not extract any menu items or prices.
+
+- name: the restaurant/venue's name as printed on the menu.
+- branch_hint: a specific location/branch qualifier if the menu shows one (e.g. "Marina" or "Downtown"), \
+otherwise omit it.
+- currency: the ISO 4217 currency code implied by the prices shown (e.g. "AED") — your best guess if not explicit."""
+
+
+async def detect_venue(page_image: tuple[bytes, str], model: str | None = None) -> VenueHint:
+    """A cheap, single-image call used only to pre-fill the upload page's
+    venue field (apps/api's POST /internal/detect-venue) — much smaller
+    output than extract_menu's full item extraction, so it's fast enough
+    to run synchronously right after a file is dropped. The actual
+    branch_id is still resolved from the *confirmed* text at submit time
+    (fuzzy-matched against real branches), never trusted from this hint
+    alone — same reasoning as extract_menu's own venue_hint sanity check."""
+    image_bytes, mime_type = page_image
+    encoded = base64.b64encode(image_bytes).decode()
+    completion = await get_client().chat.completions.parse(
+        model=model or settings.openai_vision_model,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": VENUE_DETECTION_PROMPT},
+                    {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{encoded}"}},
+                ],
+            }
+        ],
+        response_format=VenueHint,
+    )
+    parsed = completion.choices[0].message.parsed
+    if parsed is None:
+        raise RuntimeError(f"Model refused or returned unparseable output: {completion.choices[0].message.refusal}")
+    return parsed
+
+
 async def extract_menu(page_images: list[tuple[bytes, str]], model: str | None = None) -> PartialExtraction:
     content: list[dict[str, object]] = [{"type": "text", "text": EXTRACTION_PROMPT}]
     for image_bytes, mime_type in page_images:

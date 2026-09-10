@@ -6,17 +6,27 @@ import {
   Param,
   ParseFilePipe,
   Post,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { ApiBody, ApiConsumes, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiConsumes, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { InternalService } from "./internal.service";
 import { EnqueueIngestDto, EnqueueAckDto, ReviewQueueItemDto, ReviewDecisionDto } from "./dto/ingest.dto";
-import { BranchListItemDto } from "./dto/branch-list.dto";
-import { UploadMenuDto, UploadMenuResponseDto } from "./dto/upload.dto";
+import { UploadMenuDto, UploadMenuResponseDto, VenueDetectionResultDto } from "./dto/upload.dto";
+import { VenueSearchResultDto, CreateVenueDto, CreateVenueResponseDto } from "./dto/venue.dto";
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // menus are photos/PDFs, not video
+
+const FILE_UPLOAD_BODY = {
+  schema: {
+    type: "object",
+    properties: {
+      file: { type: "string", format: "binary" },
+    },
+  },
+} as const;
 
 @ApiTags("internal")
 @Controller("internal")
@@ -30,11 +40,32 @@ export class InternalController {
     return this.internalService.enqueueIngest(dto);
   }
 
-  @Get("branches")
-  @ApiOperation({ summary: "List branches — backs the menu-upload page's venue picker." })
-  @ApiOkResponse({ type: [BranchListItemDto] })
-  listBranches(): Promise<BranchListItemDto[]> {
-    return this.internalService.listBranches();
+  @Post("detect-venue")
+  @ApiOperation({ summary: "Quick synchronous venue-name guess from a dropped file, to pre-fill the upload form." })
+  @ApiConsumes("multipart/form-data")
+  @ApiBody(FILE_UPLOAD_BODY)
+  @ApiOkResponse({ type: VenueDetectionResultDto })
+  @UseInterceptors(FileInterceptor("file"))
+  detectVenue(
+    @UploadedFile(new ParseFilePipe({ validators: [new MaxFileSizeValidator({ maxSize: MAX_UPLOAD_BYTES })] }))
+    file: Express.Multer.File,
+  ): Promise<VenueDetectionResultDto> {
+    return this.internalService.detectVenue(file);
+  }
+
+  @Get("venues")
+  @ApiOperation({ summary: "Fuzzy-search real venues — backs the upload page's venue combobox." })
+  @ApiQuery({ name: "q", required: false, description: "Search text; empty returns a default browsable list." })
+  @ApiOkResponse({ type: [VenueSearchResultDto] })
+  searchVenues(@Query("q") q?: string): Promise<VenueSearchResultDto[]> {
+    return this.internalService.searchVenues(q ?? "");
+  }
+
+  @Post("venues")
+  @ApiOperation({ summary: "Create a new restaurant + branch (the combobox's \"add as new venue\" path)." })
+  @ApiOkResponse({ type: CreateVenueResponseDto })
+  createVenue(@Body() dto: CreateVenueDto): Promise<CreateVenueResponseDto> {
+    return this.internalService.createVenue(dto);
   }
 
   @Post("upload")

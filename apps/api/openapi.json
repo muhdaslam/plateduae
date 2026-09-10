@@ -389,11 +389,59 @@
         ]
       }
     },
-    "/internal/branches": {
-      "get": {
-        "operationId": "InternalController_listBranches",
-        "summary": "List branches — backs the menu-upload page's venue picker.",
+    "/internal/detect-venue": {
+      "post": {
+        "operationId": "InternalController_detectVenue",
+        "summary": "Quick synchronous venue-name guess from a dropped file, to pre-fill the upload form.",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VenueDetectionResultDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/venues": {
+      "get": {
+        "operationId": "InternalController_searchVenues",
+        "summary": "Fuzzy-search real venues — backs the upload page's venue combobox.",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search text; empty returns a default browsable list.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -402,8 +450,38 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/BranchListItemDto"
+                    "$ref": "#/components/schemas/VenueSearchResultDto"
                   }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal"
+        ]
+      },
+      "post": {
+        "operationId": "InternalController_createVenue",
+        "summary": "Create a new restaurant + branch (the combobox's \"add as new venue\" path).",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVenueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateVenueResponseDto"
                 }
               }
             }
@@ -981,27 +1059,89 @@
           "jobId"
         ]
       },
-      "BranchListItemDto": {
+      "VenueDetectionResultDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "branchHint": {
+            "type": "string",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "branchHint",
+          "currency"
+        ]
+      },
+      "VenueSearchResultDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string"
           },
-          "restaurantName": {
-            "type": "string"
+          "name": {
+            "type": "string",
+            "description": "\"Brand name — community\", e.g. \"Corner Kitchen — Business Bay\"."
           },
           "address": {
-            "type": "string"
-          },
-          "community": {
             "type": "string"
           }
         },
         "required": [
           "id",
-          "restaurantName",
+          "name",
+          "address"
+        ]
+      },
+      "CreateVenueDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Restaurant brand name."
+          },
+          "address": {
+            "type": "string"
+          },
+          "community": {
+            "type": "string",
+            "description": "e.g. \"Business Bay\" — the launch-polygon unit."
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
           "address",
-          "community"
+          "community",
+          "lat",
+          "lng"
+        ]
+      },
+      "CreateVenueResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "\"Brand name — community\", matching VenueSearchResultDto.name."
+          }
+        },
+        "required": [
+          "id",
+          "name"
         ]
       },
       "UploadMenuResponseDto": {

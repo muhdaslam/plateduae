@@ -174,17 +174,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/internal/branches": {
+    "/internal/detect-venue": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List branches — backs the menu-upload page's venue picker. */
-        get: operations["InternalController_listBranches"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Quick synchronous venue-name guess from a dropped file, to pre-fill the upload form. */
+        post: operations["InternalController_detectVenue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/venues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fuzzy-search real venues — backs the upload page's venue combobox. */
+        get: operations["InternalController_searchVenues"];
+        put?: never;
+        /** Create a new restaurant + branch (the combobox's "add as new venue" path). */
+        post: operations["InternalController_createVenue"];
         delete?: never;
         options?: never;
         head?: never;
@@ -369,11 +387,30 @@ export interface components {
             accepted: boolean;
             jobId: string;
         };
-        BranchListItemDto: {
+        VenueDetectionResultDto: {
+            name: string;
+            branchHint: string | null;
+            currency: string;
+        };
+        VenueSearchResultDto: {
             id: string;
-            restaurantName: string;
+            /** @description "Brand name — community", e.g. "Corner Kitchen — Business Bay". */
+            name: string;
             address: string;
+        };
+        CreateVenueDto: {
+            /** @description Restaurant brand name. */
+            name: string;
+            address: string;
+            /** @description e.g. "Business Bay" — the launch-polygon unit. */
             community: string;
+            lat: number;
+            lng: number;
+        };
+        CreateVenueResponseDto: {
+            id: string;
+            /** @description "Brand name — community", matching VenueSearchResultDto.name. */
+            name: string;
         };
         UploadMenuResponseDto: {
             accepted: boolean;
@@ -634,9 +671,38 @@ export interface operations {
             };
         };
     };
-    InternalController_listBranches: {
+    InternalController_detectVenue: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueDetectionResultDto"];
+                };
+            };
+        };
+    };
+    InternalController_searchVenues: {
+        parameters: {
+            query?: {
+                /** @description Search text; empty returns a default browsable list. */
+                q?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -648,7 +714,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BranchListItemDto"][];
+                    "application/json": components["schemas"]["VenueSearchResultDto"][];
+                };
+            };
+        };
+    };
+    InternalController_createVenue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateVenueDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateVenueResponseDto"];
                 };
             };
         };
