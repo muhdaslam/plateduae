@@ -35,7 +35,7 @@ export class InternalService {
       response = await fetch(`${dataWorkersUrl}/enqueue`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ artefact_id: dto.artefactId, channel: dto.channel }),
+        body: JSON.stringify({ artefact_id: dto.artefactId, branch_id: dto.branchId, channel: dto.channel }),
       });
     } catch {
       throw new ServiceUnavailableException(

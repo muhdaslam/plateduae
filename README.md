@@ -23,13 +23,18 @@ canonical taxonomy is seeded (`packages/db/src/taxonomy`) covering Dubai's
 core cuisine mix, short of the plan's 800-1,200 target which needs actual
 food-literate curation. Dish canonicalisation matching is implemented
 (`services/data-workers/tasks/canonicalisation.py`, section 5.3): hybrid
-local-embedding + fuzzy matching with the plan's confidence banding — see
-that service's README. `POST /internal/ingest` really dispatches a job to
-the Python worker now, over HTTP (Arq's job serialisation is Python-
-specific, so Node calls a plain HTTP bridge rather than talking Arq's wire
-protocol directly — see that service's README). Still not implemented:
-the actual OCR/vision-LLM extraction logic itself, auth, affiliate/
-commission handling. See "Non-scope" below.
+local-embedding + fuzzy matching with the plan's confidence banding.
+**The full capture-to-searchable pipeline is real**: `POST /internal/ingest`
+dispatches over HTTP to the Python worker (Arq's job serialisation is
+Python-specific, so Node calls a plain HTTP bridge rather than talking
+Arq's wire protocol directly), which fetches the artefact, calls a real
+OpenAI vision model to extract structured menu data (PDF section 5.2
+stages 3-5), writes it, and canonicalises each item — all the way to
+being searchable once confirmed. See `services/data-workers/README.md`
+for how to run this end-to-end yourself. Still not implemented: an OCR
+pre-pass (cost optimisation, not correctness — the vision model reads
+text directly), auth, affiliate/commission handling. See "Non-scope"
+below.
 
 ## Layout
 
@@ -73,9 +78,9 @@ Once `apps/api` is running: OpenAPI docs at `http://localhost:3001/docs`.
 
 ## Non-scope for this pass
 
-Not built yet, on purpose: OCR/vision-LLM extraction logic, hybrid
-BM25+vector retrieval over OpenSearch, query intent classification (9.1),
-auth/session, affiliate/commission logic, the React Native mobile app,
-restaurant/review consoles, production hosting (AWS/ECS/Terraform), CDN/WAF,
-observability wiring. These land in later phases per the plan's own roadmap
-(Phase 2 onward).
+Not built yet, on purpose: an OCR pre-pass ahead of the vision-LLM call,
+de-skew/rotation correction, hybrid BM25+vector retrieval over OpenSearch,
+query intent classification (9.1), auth/session, affiliate/commission
+logic, the React Native mobile app, restaurant/review consoles, production
+hosting (AWS/ECS/Terraform), CDN/WAF, observability wiring. These land in
+later phases per the plan's own roadmap (Phase 2 onward).

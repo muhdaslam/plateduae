@@ -1,10 +1,20 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsIn, IsOptional, IsString } from "class-validator";
+import { IsIn, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class EnqueueIngestDto {
   @ApiProperty({ description: "Object storage key of the captured source artefact." })
   @IsString()
   artefactId!: string;
+
+  @ApiProperty({
+    description:
+      "The branch this menu belongs to. Required: menu.branch_id is not-null, and section 5.1's supply " +
+      "strategy has this known at upload time (restaurant self-upload, partner integration) rather than " +
+      "inferred from the artefact itself — extraction's venue_hint is a cross-check against this, not a " +
+      "substitute for it.",
+  })
+  @IsUUID()
+  branchId!: string;
 
   @ApiProperty({ enum: ["dine_in", "delivery", "takeaway"] })
   @IsIn(["dine_in", "delivery", "takeaway"])

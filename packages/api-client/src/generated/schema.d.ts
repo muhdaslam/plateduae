@@ -320,6 +320,8 @@ export interface components {
         EnqueueIngestDto: {
             /** @description Object storage key of the captured source artefact. */
             artefactId: string;
+            /** @description The branch this menu belongs to. Required: menu.branch_id is not-null, and section 5.1's supply strategy has this known at upload time (restaurant self-upload, partner integration) rather than inferred from the artefact itself — extraction's venue_hint is a cross-check against this, not a substitute for it. */
+            branchId: string;
             /** @enum {string} */
             channel: "dine_in" | "delivery" | "takeaway";
         };
@@ -330,7 +332,8 @@ export interface components {
         ReviewQueueItemDto: {
             dishMappingId: string;
             menuItemName: string;
-            candidateCanonicalDishName: string;
+            /** @description Null when nothing in the taxonomy matched confidently (PDF 5.3's <0.70 band) — needs a brand-new canonical dish, not just confirmation. */
+            candidateCanonicalDishName: Record<string, never> | null;
             confidence: number;
         };
         ReviewDecisionDto: {

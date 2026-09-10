@@ -858,6 +858,10 @@
             "type": "string",
             "description": "Object storage key of the captured source artefact."
           },
+          "branchId": {
+            "type": "string",
+            "description": "The branch this menu belongs to. Required: menu.branch_id is not-null, and section 5.1's supply strategy has this known at upload time (restaurant self-upload, partner integration) rather than inferred from the artefact itself — extraction's venue_hint is a cross-check against this, not a substitute for it."
+          },
           "channel": {
             "type": "string",
             "enum": [
@@ -869,6 +873,7 @@
         },
         "required": [
           "artefactId",
+          "branchId",
           "channel"
         ]
       },
@@ -897,7 +902,9 @@
             "type": "string"
           },
           "candidateCanonicalDishName": {
-            "type": "string"
+            "type": "object",
+            "nullable": true,
+            "description": "Null when nothing in the taxonomy matched confidently (PDF 5.3's <0.70 band) — needs a brand-new canonical dish, not just confirmation."
           },
           "confidence": {
             "type": "number"
