@@ -389,6 +389,80 @@
         ]
       }
     },
+    "/internal/branches": {
+      "get": {
+        "operationId": "InternalController_listBranches",
+        "summary": "List branches — backs the menu-upload page's venue picker.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BranchListItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/upload": {
+      "post": {
+        "operationId": "InternalController_uploadMenu",
+        "summary": "Upload a menu photo/PDF and enqueue it for extraction (section 5.1 self-upload).",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "branchId": {
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "dine_in",
+                      "delivery",
+                      "takeaway"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadMenuResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal"
+        ]
+      }
+    },
     "/internal/review/queue": {
       "get": {
         "operationId": "InternalController_getReviewQueue",
@@ -904,6 +978,50 @@
         },
         "required": [
           "accepted",
+          "jobId"
+        ]
+      },
+      "BranchListItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "restaurantName": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "community": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "restaurantName",
+          "address",
+          "community"
+        ]
+      },
+      "UploadMenuResponseDto": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "artefactId": {
+            "type": "string",
+            "description": "The object storage key the file was stored under."
+          },
+          "jobId": {
+            "type": "string",
+            "description": "The Arq job id processing this upload."
+          }
+        },
+        "required": [
+          "accepted",
+          "artefactId",
           "jobId"
         ]
       },

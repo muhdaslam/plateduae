@@ -174,6 +174,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/internal/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List branches — backs the menu-upload page's venue picker. */
+        get: operations["InternalController_listBranches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload a menu photo/PDF and enqueue it for extraction (section 5.1 self-upload). */
+        post: operations["InternalController_uploadMenu"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/internal/review/queue": {
         parameters: {
             query?: never;
@@ -333,6 +367,19 @@ export interface components {
         };
         EnqueueAckDto: {
             accepted: boolean;
+            jobId: string;
+        };
+        BranchListItemDto: {
+            id: string;
+            restaurantName: string;
+            address: string;
+            community: string;
+        };
+        UploadMenuResponseDto: {
+            accepted: boolean;
+            /** @description The object storage key the file was stored under. */
+            artefactId: string;
+            /** @description The Arq job id processing this upload. */
             jobId: string;
         };
         ReviewQueueItemDto: {
@@ -583,6 +630,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnqueueAckDto"];
+                };
+            };
+        };
+    };
+    InternalController_listBranches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchListItemDto"][];
+                };
+            };
+        };
+    };
+    InternalController_uploadMenu: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file?: string;
+                    branchId?: string;
+                    /** @enum {string} */
+                    channel?: "dine_in" | "delivery" | "takeaway";
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadMenuResponseDto"];
                 };
             };
         };

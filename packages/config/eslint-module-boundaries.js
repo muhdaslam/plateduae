@@ -25,6 +25,7 @@ module.exports = {
       { type: "common", pattern: "src/common/*", mode: "folder" },
       { type: "config", pattern: "src/config/*", mode: "folder" },
       { type: "database", pattern: "src/database/*", mode: "folder" },
+      { type: "storage", pattern: "src/storage/*", mode: "folder" },
     ],
   },
   rules: {
@@ -33,9 +34,9 @@ module.exports = {
       {
         default: "disallow",
         rules: [
-          // Any module may use common/, config/ and database/ freely.
-          { from: "module", allow: ["common", "config", "database"] },
-          { from: "common", allow: ["common", "config", "database"] },
+          // Any module may use common/, config/, database/ and storage/ freely.
+          { from: "module", allow: ["common", "config", "database", "storage"] },
+          { from: "common", allow: ["common", "config", "database", "storage"] },
           // A module may depend on another module at all (this rule only
           // governs which element *types* can depend on which); whether
           // that import must go through index.ts is enforced separately
