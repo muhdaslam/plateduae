@@ -1,34 +1,20 @@
-import { eq } from "drizzle-orm";
-import { createDb, type Database } from "./client";
-import {
-  restaurant,
-  branch,
-  menu,
-  menuItem,
-  canonicalDish,
-  dishMapping,
-  priceObservation,
-} from "./schema";
+import { createDb } from "./client";
+import { restaurant, branch, menu, menuItem, priceObservation } from "./schema";
 
 /**
  * Minimal, realistic sample dataset for local development: two venues in
  * Business Bay both serving "chicken shawarma" at different prices (so the
- * price-comparison view has something to compare), plus one pending-review
- * mapping so the internal review queue isn't always empty. Not idempotent —
- * intended for a fresh local DB, matching `make bootstrap`'s flow.
+ * price-comparison view has something to compare) and one "Shish Taouk
+ * Wrap" item. Not idempotent — intended for a fresh local DB, matching
+ * `make bootstrap`'s flow.
  *
- * Looks up its two canonical dishes by name rather than inserting them
- * directly: both already exist in the taxonomy (src/taxonomy, loaded by
- * `db:seed-taxonomy`), which `make bootstrap` runs first. Falls back to
- * inserting if that step was skipped, so this script still works alone.
+ * Deliberately does NOT create dish_mapping rows: those come from the real
+ * canonicalisation matching service (services/data-workers/tasks/
+ * canonicalisation.py) now that it exists — see README for the
+ * `canonicalise-seed-data.py` follow-up step. Faking plausible-looking
+ * confidence numbers here would be less honest than actually running the
+ * algorithm against this data.
  */
-async function getOrCreateCanonicalDish(db: Database, values: typeof canonicalDish.$inferInsert) {
-  const [existing] = await db.select().from(canonicalDish).where(eq(canonicalDish.canonicalName, values.canonicalName));
-  if (existing) return existing;
-  const [created] = await db.insert(canonicalDish).values(values).returning();
-  return created!;
-}
-
 async function main() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL is required.");
@@ -75,23 +61,6 @@ async function main() {
     .values({ branchId: cornerBranch!.id, channel: "dine_in", sourceArtefactId: "seed:corner-menu-1" })
     .returning();
 
-  const shawarmaDish = await getOrCreateCanonicalDish(db, {
-    canonicalName: "Chicken Shawarma",
-    aliases: ["Shawarma Djaj", "Chicken Shawarma Sandwich"],
-    nameAr: "شاورما دجاج",
-    cuisine: "levantine",
-    category: "sandwich",
-    curatedBy: "seed",
-  });
-  const taoukDish = await getOrCreateCanonicalDish(db, {
-    canonicalName: "Shish Taouk Wrap",
-    aliases: [],
-    nameAr: "لفة شيش طاووق",
-    cuisine: "levantine",
-    category: "sandwich",
-    curatedBy: "seed",
-  });
-
   const [alReefShawarma] = await db
     .insert(menuItem)
     .values({
@@ -103,7 +72,7 @@ async function main() {
       section: "Grills",
       dietaryFlags: ["halal"],
       allergenFlags: ["gluten", "milk"],
-      confidence: 0.94,
+      confidence: 0.94, // extraction confidence (Appendix B) - not canonicalisation confidence
     })
     .returning();
   const [cornerShawarma] = await db
@@ -135,36 +104,15 @@ async function main() {
     })
     .returning();
 
-  await db.insert(dishMapping).values([
-    {
-      menuItemId: alReefShawarma!.id,
-      canonicalDishId: shawarmaDish.id,
-      confidence: 0.94,
-      reviewState: "confirmed",
-    },
-    {
-      menuItemId: cornerShawarma!.id,
-      canonicalDishId: shawarmaDish.id,
-      confidence: 0.72,
-      reviewState: "pending_review", // leaves one real row in the internal review queue
-    },
-    {
-      menuItemId: cornerTaouk!.id,
-      canonicalDishId: taoukDish.id,
-      confidence: 0.9,
-      reviewState: "confirmed",
-    },
-  ]);
-
   await db.insert(priceObservation).values([
     { menuItemId: alReefShawarma!.id, channel: "dine_in", price: "14.00", source: "extraction", verifiedBy: "system" },
     { menuItemId: cornerShawarma!.id, channel: "dine_in", price: "11.50", source: "extraction", verifiedBy: "system" },
     { menuItemId: cornerTaouk!.id, channel: "dine_in", price: "13.00", source: "extraction", verifiedBy: "system" },
   ]);
 
-  console.log("Seed complete.");
-  console.log(`  canonical dish (for GET /v1/dishes/:id): ${shawarmaDish.id}`);
+  console.log("Seed complete (no dish_mapping rows yet).");
   console.log(`  venue (for GET /v1/venues/:id): ${alReefBranch!.id}`);
+  console.log("  Run services/data-workers/scripts/canonicalise_all.py to map these menu items to canonical dishes.");
 }
 
 main()

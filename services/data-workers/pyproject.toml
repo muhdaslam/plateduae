@@ -10,7 +10,10 @@ dependencies = [
     "pydantic>=2.9.0",
     "pydantic-settings>=2.6.0",
     "asyncpg>=0.30.0",
+    "pgvector>=0.3.0",
     "redis>=5.2.0",
+    "sentence-transformers>=3.2.0",
+    "rapidfuzz>=3.10.0",
 ]
 
 [project.optional-dependencies]
@@ -30,10 +33,17 @@ target-version = "py311"
 python_version = "3.11"
 strict = true
 
+# asyncpg and sentence-transformers ship no py.typed marker / usable stubs;
+# without this every asyncpg.* and SentenceTransformer.* call site would
+# need its own ignore comment.
+[[tool.mypy.overrides]]
+module = ["asyncpg.*", "sentence_transformers.*", "pgvector.*"]
+ignore_missing_imports = true
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["app*", "tasks*", "schemas*"]
+include = ["app*", "tasks*", "schemas*", "scripts*"]

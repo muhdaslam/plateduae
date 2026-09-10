@@ -1,8 +1,10 @@
 import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
 import { vector } from "./custom-types";
 
-// Placeholder dimension pending embedding model choice (PDF section 5.3).
-export const CANONICAL_DISH_EMBEDDING_DIMENSIONS = 768;
+// sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 (chosen for
+// dish canonicalisation matching, PDF section 5.3: local multilingual
+// model, no API key/external dependency) outputs 384-dim vectors.
+export const CANONICAL_DISH_EMBEDDING_DIMENSIONS = 384;
 
 /** The abstract dish users search for — the structural decision the whole
  * product rests on. "Chicken Shawarma Sandwich" and "Shawarma Djaj" map to

@@ -14,9 +14,11 @@ what's simplified versus the plan's full design (real ranking/OpenSearch,
 full filters, cursor pagination are not there yet). A ~107-dish starter
 canonical taxonomy is seeded (`packages/db/src/taxonomy`) covering Dubai's
 core cuisine mix, short of the plan's 800-1,200 target which needs actual
-food-literate curation. Still not implemented: OCR/vision-LLM extraction,
-canonicalisation matching (the taxonomy exists, the matching algorithm
-doesn't yet), auth, affiliate/commission handling. See "Non-scope" below.
+food-literate curation. Dish canonicalisation matching is implemented
+(`services/data-workers/tasks/canonicalisation.py`, section 5.3): hybrid
+local-embedding + fuzzy matching with the plan's confidence banding — see
+that service's README. Still not implemented: OCR/vision-LLM extraction,
+auth, affiliate/commission handling. See "Non-scope" below.
 
 ## Layout
 
@@ -48,8 +50,9 @@ later stays cheap.
 
 ```bash
 cp .env.example .env
-make bootstrap    # docker compose up, pnpm install, generate contracts, migrate DB, seed the canonical taxonomy, set up the Python venv
+make bootstrap    # docker compose up, pnpm install, generate contracts, migrate DB, seed + embed the canonical taxonomy, set up the Python venv
 make db-seed      # optional: fake demo restaurants/menus so search/comparison have something to show
+make canonicalise # optional: map those demo menu items to canonical dishes (needs db-seed first)
 pnpm dev          # apps/web + apps/api
 ```
 
@@ -59,8 +62,8 @@ Once `apps/api` is running: OpenAPI docs at `http://localhost:3001/docs`.
 
 ## Non-scope for this pass
 
-Not built yet, on purpose: OCR/vision-LLM extraction logic, canonicalisation
-matching/embedding logic, search ranking, auth/session, affiliate/commission
-logic, the React Native mobile app, restaurant/review consoles, production
-hosting (AWS/ECS/Terraform), CDN/WAF, observability wiring. These land in
-later phases per the plan's own roadmap (Phase 2 onward).
+Not built yet, on purpose: OCR/vision-LLM extraction logic, search ranking,
+auth/session, affiliate/commission logic, the React Native mobile app,
+restaurant/review consoles, production hosting (AWS/ECS/Terraform), CDN/WAF,
+observability wiring. These land in later phases per the plan's own roadmap
+(Phase 2 onward).

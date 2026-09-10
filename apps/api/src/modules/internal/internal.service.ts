@@ -37,7 +37,10 @@ export class InternalService {
       })
       .from(dishMapping)
       .innerJoin(menuItem, eq(dishMapping.menuItemId, menuItem.id))
-      .innerJoin(canonicalDish, eq(dishMapping.canonicalDishId, canonicalDish.id))
+      // LEFT join: canonicalDishId is null for the <0.70-confidence band
+      // (PDF 5.3) — those rows belong in the queue too, just with no
+      // candidate name to show.
+      .leftJoin(canonicalDish, eq(dishMapping.canonicalDishId, canonicalDish.id))
       .where(eq(dishMapping.reviewState, "pending_review"));
     return rows;
   }

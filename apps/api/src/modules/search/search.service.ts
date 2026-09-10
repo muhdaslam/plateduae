@@ -13,6 +13,11 @@ import { SearchResultDto, SearchResultItemDto, SuggestResultDto } from "./dto/se
  * OpenSearch, the full weighted ranking model (9.3), personalisation,
  * dietary/cuisine/open-now filters, and real cursor pagination (LIMIT-only
  * for now) — all separate, larger pieces of work than "make this real".
+ *
+ * Only 'confirmed'/'auto_mapped' dish_mapping rows are searchable —
+ * 'pending_review' (canonicalisation's 0.70-0.90 confidence band) hasn't
+ * been human-verified, and surfacing an unverified match as a real result
+ * is the "confidently wrong" failure mode section 5.4 warns against.
  */
 @Injectable()
 export class SearchService {
@@ -20,7 +25,7 @@ export class SearchService {
 
   async search(query: SearchQueryDto): Promise<SearchResultDto> {
     const hasGeo = query.lat !== undefined && query.lng !== undefined;
-    const conditions: SQL[] = [sql`dm.review_state != 'rejected'`];
+    const conditions: SQL[] = [sql`dm.review_state IN ('confirmed', 'auto_mapped')`];
 
     if (hasGeo) {
       const radiusMeters = (query.radius ?? 3) * 1000;

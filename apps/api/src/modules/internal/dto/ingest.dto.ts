@@ -19,7 +19,11 @@ export class EnqueueAckDto {
 export class ReviewQueueItemDto {
   @ApiProperty() dishMappingId!: string;
   @ApiProperty() menuItemName!: string;
-  @ApiProperty() candidateCanonicalDishName!: string;
+  @ApiProperty({
+    nullable: true,
+    description: "Null when nothing in the taxonomy matched confidently (PDF 5.3's <0.70 band) — needs a brand-new canonical dish, not just confirmation.",
+  })
+  candidateCanonicalDishName!: string | null;
   @ApiProperty() confidence!: number;
 }
 

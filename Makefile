@@ -1,4 +1,4 @@
-.PHONY: up down logs db-migrate db-seed-taxonomy db-seed db-studio generate-contracts bootstrap
+.PHONY: up down logs db-migrate db-seed-taxonomy db-seed db-studio generate-contracts embed-taxonomy canonicalise bootstrap
 
 up:
 	docker compose up -d
@@ -24,6 +24,12 @@ db-seed:
 db-studio:
 	pnpm db:studio
 
+embed-taxonomy:
+	cd services/data-workers && . .venv/bin/activate && python -m scripts.embed_taxonomy
+
+canonicalise:
+	cd services/data-workers && . .venv/bin/activate && python -m scripts.canonicalise_all
+
 generate-contracts:
 	pnpm contracts:generate
 	cd services/data-workers && \
@@ -42,5 +48,7 @@ bootstrap: up
 	pnpm db:migrate
 	pnpm db:seed-taxonomy
 	cd services/data-workers && python3 -m venv .venv && . .venv/bin/activate && pip install -e ".[dev]"
-	@echo "Bootstrap complete. Canonical dish taxonomy loaded (see packages/db/src/taxonomy)."
-	@echo "Run 'make db-seed' for fake demo restaurants/menus to test against, 'pnpm dev' to start web+api, and the data-workers service separately (see services/data-workers/README)."
+	$(MAKE) embed-taxonomy
+	@echo "Bootstrap complete. Canonical dish taxonomy loaded and embedded (see packages/db/src/taxonomy)."
+	@echo "Run 'make db-seed' for fake demo restaurants/menus, then 'make canonicalise' to map them to canonical dishes."
+	@echo "'pnpm dev' starts web+api; the data-workers service runs separately (see services/data-workers/README)."

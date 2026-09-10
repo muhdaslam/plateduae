@@ -17,6 +17,12 @@ import { percentiles } from "../../common/percentiles";
  * there's a real publish pipeline populating it; nothing does yet, so a
  * live query is the honest "real data" answer for this pass instead of a
  * table nothing writes to.
+ *
+ * Only 'confirmed' and 'auto_mapped' dish_mapping rows are consumer-facing
+ * — 'pending_review' (the 0.70-0.90 confidence band from canonicalisation
+ * matching, section 5.3) means a human hasn't verified the match yet, and
+ * showing an unverified mapping as fact in a price comparison is exactly
+ * the "confidently wrong" failure mode section 5.4 warns destroys trust.
  */
 @Injectable()
 export class CatalogueService {
@@ -30,7 +36,7 @@ export class CatalogueService {
       SELECT cp.price::float8 AS price
       FROM current_price cp
       JOIN dish_mapping dm ON dm.menu_item_id = cp.menu_item_id
-      WHERE dm.canonical_dish_id = ${id} AND dm.review_state != 'rejected'
+      WHERE dm.canonical_dish_id = ${id} AND dm.review_state IN ('confirmed', 'auto_mapped')
     `);
     const prices = priceRows.rows.map((r) => r.price);
 
@@ -72,7 +78,7 @@ export class CatalogueService {
       JOIN branch b ON b.id = m.branch_id
       JOIN restaurant r ON r.id = b.restaurant_id
       JOIN current_price cp ON cp.menu_item_id = mi.id
-      WHERE dm.canonical_dish_id = ${id} AND dm.review_state != 'rejected'
+      WHERE dm.canonical_dish_id = ${id} AND dm.review_state IN ('confirmed', 'auto_mapped')
       ORDER BY price ASC
     `);
 
