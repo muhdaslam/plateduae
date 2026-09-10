@@ -170,6 +170,23 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "lng",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lat",
+            "required": false,
+            "in": "query",
+            "description": "Omit distance from lat/lng if not given.",
+            "schema": {
+              "type": "number"
+            }
           }
         ],
         "responses": {

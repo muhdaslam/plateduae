@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
-import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { CatalogueService } from "./catalogue.service";
 import { DishDetailDto, DishOfferDto } from "./dto/dish-detail.dto";
 import { CreateCorrectionDto, CorrectionAckDto } from "./dto/correction.dto";
+import { OffersQueryDto } from "./dto/offers-query.dto";
 
 @ApiTags("catalogue")
 @Controller("v1")
@@ -18,9 +19,11 @@ export class CatalogueController {
 
   @Get("dishes/:id/offers")
   @ApiOperation({ summary: "Every nearby menu item mapped to this canonical dish, ranked." })
+  @ApiQuery({ name: "lat", required: false, type: Number, description: "Omit distance from lat/lng if not given." })
+  @ApiQuery({ name: "lng", required: false, type: Number })
   @ApiOkResponse({ type: [DishOfferDto] })
-  getOffers(@Param("id") id: string): Promise<DishOfferDto[]> {
-    return this.catalogueService.getOffers(id);
+  getOffers(@Param("id") id: string, @Query() query: OffersQueryDto): Promise<DishOfferDto[]> {
+    return this.catalogueService.getOffers(id, query.lat, query.lng);
   }
 
   @Post("corrections")

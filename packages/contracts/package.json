@@ -2,9 +2,10 @@
   "name": "@plated/contracts",
   "version": "0.0.0",
   "private": true,
-  "main": "./src/generated/extraction.ts",
-  "types": "./src/generated/extraction.ts",
+  "main": "./dist/generated/extraction.js",
+  "types": "./dist/generated/extraction.d.ts",
   "scripts": {
+    "build": "tsc -p tsconfig.json",
     "generate": "json2ts schemas/extraction.schema.json -o src/generated/extraction.ts --bannerComment \"// AUTO-GENERATED from schemas/extraction.schema.json. Do not edit by hand. Run pnpm contracts:generate.\"",
     "typecheck": "tsc --noEmit"
   },

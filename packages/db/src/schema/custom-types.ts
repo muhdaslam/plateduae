@@ -19,10 +19,21 @@ export const geoPoint = customType<{ data: string; driverData: string }>({
     return "geometry(Point, 4326)";
   },
   toDriver(value: string): string {
-    // Expects a WKT string, e.g. "POINT(55.2708 25.2048)" (lng lat order).
-    return `ST_GeomFromText('${value}', 4326)`;
+    // customType.toDriver produces a bound parameter VALUE, not raw SQL —
+    // it cannot embed a function call like ST_GeomFromText(...); Postgres
+    // would just try to parse that literal string as WKT and fail. EWKT
+    // (an "SRID=...;" prefix on plain WKT) is understood directly by the
+    // geometry type's own input parser, no function call needed. Expects
+    // a bare WKT string, e.g. "POINT(55.2708 25.2048)" (lng lat order).
+    return `SRID=4326;${value}`;
   },
   fromDriver(value: string): string {
+    // Postgres's default text output for a geometry column is EWKB hex,
+    // not WKT, so a direct ORM `.select()` of this column would return
+    // that raw hex here rather than human-readable WKT. Not hit by this
+    // pass's queries (they use raw `sql` fragments with explicit
+    // ST_AsText/ST_Distance instead of selecting the column directly) —
+    // flagged rather than silently wrong if that changes later.
     return value;
   },
 });

@@ -425,7 +425,11 @@ export interface operations {
     };
     CatalogueController_getOffers: {
         parameters: {
-            query?: never;
+            query?: {
+                lng?: number;
+                /** @description Omit distance from lat/lng if not given. */
+                lat?: number;
+            };
             header?: never;
             path: {
                 id: string;

@@ -22,7 +22,8 @@
     "rxjs": "^7.8.1",
     "@plated/db": "workspace:*",
     "@plated/shared-types": "workspace:*",
-    "@plated/contracts": "workspace:*"
+    "@plated/contracts": "workspace:*",
+    "drizzle-orm": "^0.36.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.4.0",

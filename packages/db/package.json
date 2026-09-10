@@ -2,11 +2,13 @@
   "name": "@plated/db",
   "version": "0.0.0",
   "private": true,
-  "main": "./src/client.ts",
-  "types": "./src/client.ts",
+  "main": "./dist/client.js",
+  "types": "./dist/client.d.ts",
   "scripts": {
+    "build": "tsc -p tsconfig.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "dotenv -e ../../.env -- tsx src/migrate.ts",
+    "db:seed": "dotenv -e ../../.env -- tsx src/seed.ts",
     "db:studio": "dotenv -e ../../.env -- drizzle-kit studio",
     "typecheck": "tsc --noEmit"
   },
