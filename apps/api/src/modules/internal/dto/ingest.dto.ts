@@ -30,6 +30,7 @@ export class ReviewQueueItemDto {
   @ApiProperty() dishMappingId!: string;
   @ApiProperty() menuItemName!: string;
   @ApiProperty({
+    type: String,
     nullable: true,
     description: "Null when nothing in the taxonomy matched confidently (PDF 5.3's <0.70 band) — needs a brand-new canonical dish, not just confirmation.",
   })

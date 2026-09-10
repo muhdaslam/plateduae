@@ -108,6 +108,7 @@ export class SearchService {
               // CTE's output column; the outer query has no `cd` alias to reference (real bug, caught live)
 
     const rows = await this.db.execute<{
+      menu_item_id: string;
       canonical_dish_id: string;
       dish_name: string;
       venue_id: string;
@@ -120,6 +121,7 @@ export class SearchService {
     }>(sql`
       WITH candidates AS (
         SELECT
+          mi.id AS menu_item_id,
           cd.id AS canonical_dish_id,
           cd.canonical_name AS dish_name,
           b.id AS venue_id,
@@ -145,7 +147,7 @@ export class SearchService {
         WHERE ${sql.join(conditions, sql` AND `)}
       )
       SELECT
-        canonical_dish_id, dish_name, venue_id, venue_name, price, currency,
+        menu_item_id, canonical_dish_id, dish_name, venue_id, venue_name, price, currency,
         last_verified_at, distance_km, price_percentile,
         (
           ${WEIGHT_TEXT_RELEVANCE} * text_relevance +
@@ -159,6 +161,7 @@ export class SearchService {
     `);
 
     const items: SearchResultItemDto[] = rows.rows.map((r) => ({
+      menuItemId: r.menu_item_id,
       canonicalDishId: r.canonical_dish_id,
       dishName: r.dish_name,
       venueId: r.venue_id,

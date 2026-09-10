@@ -10,8 +10,8 @@ export class PriceDistributionDto {
 export class DishDetailDto {
   @ApiProperty() id!: string;
   @ApiProperty() canonicalName!: string;
-  @ApiProperty({ nullable: true }) nameAr!: string | null;
-  @ApiProperty({ nullable: true }) cuisine!: string | null;
+  @ApiProperty({ type: String, nullable: true }) nameAr!: string | null;
+  @ApiProperty({ type: String, nullable: true }) cuisine!: string | null;
   @ApiProperty({ type: PriceDistributionDto, nullable: true })
   priceDistribution!: PriceDistributionDto | null;
 }

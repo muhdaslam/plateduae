@@ -213,6 +213,8 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         SearchResultItemDto: {
+            /** @description The specific menu_item behind this result — a venue can have more than one menu_item mapped to the same canonical dish (e.g. across menu versions), so this, not venueId+canonicalDishId, is the real unique identifier for a result row. */
+            menuItemId: string;
             canonicalDishId: string;
             dishName: string;
             venueId: string;
@@ -220,18 +222,22 @@ export interface components {
             distanceKm: number;
             price: number;
             currency: string;
-            /** @description Position of this price within the local canonical-dish distribution. */
-            priceVsMedian: string;
+            /**
+             * @description Position of this price within the local canonical-dish distribution.
+             * @enum {string}
+             */
+            priceVsMedian: "below" | "at" | "above";
             /** @description ISO timestamp of the last-verified price. */
             lastVerifiedAt: string;
         };
         SearchResultDto: {
             items: components["schemas"]["SearchResultItemDto"][];
             /** @description Opaque cursor for the next page, or null if none. */
-            cursor: Record<string, never> | null;
+            cursor: string | null;
         };
         SuggestResultDto: {
-            type: string;
+            /** @enum {string} */
+            type: "canonical_dish" | "cuisine" | "venue";
             id: string;
             label: string;
         };
@@ -244,8 +250,8 @@ export interface components {
         DishDetailDto: {
             id: string;
             canonicalName: string;
-            nameAr: Record<string, never> | null;
-            cuisine: Record<string, never> | null;
+            nameAr: string | null;
+            cuisine: string | null;
             priceDistribution: components["schemas"]["PriceDistributionDto"] | null;
         };
         DishOfferDto: {
@@ -333,7 +339,7 @@ export interface components {
             dishMappingId: string;
             menuItemName: string;
             /** @description Null when nothing in the taxonomy matched confidently (PDF 5.3's <0.70 band) — needs a brand-new canonical dish, not just confirmation. */
-            candidateCanonicalDishName: Record<string, never> | null;
+            candidateCanonicalDishName: string | null;
             confidence: number;
         };
         ReviewDecisionDto: {

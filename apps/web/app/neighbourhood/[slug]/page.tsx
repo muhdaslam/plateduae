@@ -9,9 +9,9 @@
 export default async function NeighbourhoodPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   return (
-    <main>
-      <h1>{slug.replace(/-/g, " ")}</h1>
-      <p>Neighbourhood price index — coming later.</p>
-    </main>
+    <div className="space-y-2">
+      <h1 className="text-2xl font-bold capitalize text-ink-900">{slug.replace(/-/g, " ")}</h1>
+      <p className="text-sm text-ink-500">Neighbourhood price index — coming later.</p>
+    </div>
   );
 }

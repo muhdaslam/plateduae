@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Warm terracotta accent — food-forward, distinct from the incumbent
+     delivery apps' greens/reds. Used sparingly (CTAs, active states),
+     never for the organic ranking itself (PDF 9.3: sponsorship/branding
+     must never blend into ranking). */
+  --color-brand-50: #fef6ee;
+  --color-brand-100: #fdead7;
+  --color-brand-400: #f0873d;
+  --color-brand-500: #e9691f;
+  --color-brand-600: #da5015;
+  --color-brand-700: #b53c13;
+
+  --color-ink-900: #1c1917;
+  --color-ink-700: #44403c;
+  --color-ink-500: #78716c;
+  --color-ink-300: #d6d3d1;
+  --color-ink-100: #f5f5f4;
+}
+
+body {
+  background-color: var(--color-ink-100);
+  color: var(--color-ink-900);
+}

@@ -462,6 +462,10 @@
       "SearchResultItemDto": {
         "type": "object",
         "properties": {
+          "menuItemId": {
+            "type": "string",
+            "description": "The specific menu_item behind this result — a venue can have more than one menu_item mapped to the same canonical dish (e.g. across menu versions), so this, not venueId+canonicalDishId, is the real unique identifier for a result row."
+          },
           "canonicalDishId": {
             "type": "string"
           },
@@ -485,6 +489,11 @@
           },
           "priceVsMedian": {
             "type": "string",
+            "enum": [
+              "below",
+              "at",
+              "above"
+            ],
             "description": "Position of this price within the local canonical-dish distribution."
           },
           "lastVerifiedAt": {
@@ -493,6 +502,7 @@
           }
         },
         "required": [
+          "menuItemId",
           "canonicalDishId",
           "dishName",
           "venueId",
@@ -514,7 +524,7 @@
             }
           },
           "cursor": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "description": "Opaque cursor for the next page, or null if none."
           }
@@ -528,7 +538,12 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "canonical_dish",
+              "cuisine",
+              "venue"
+            ]
           },
           "id": {
             "type": "string"
@@ -576,11 +591,11 @@
             "type": "string"
           },
           "nameAr": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "cuisine": {
-            "type": "object",
+            "type": "string",
             "nullable": true
           },
           "priceDistribution": {
@@ -902,7 +917,7 @@
             "type": "string"
           },
           "candidateCanonicalDishName": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "description": "Null when nothing in the taxonomy matched confidently (PDF 5.3's <0.70 band) — needs a brand-new canonical dish, not just confirmation."
           },
